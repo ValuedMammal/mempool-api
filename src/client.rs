@@ -146,3 +146,23 @@ impl<T: Transport> AsyncClient<T> {
         self.tx.parse_response_text(resp).await.map_err(Error::Transport)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    const URL: &str = "https://mempool.space/api";
+
+    #[tokio::test]
+    async fn test_get_tip() -> anyhow::Result<()> {
+        let reqwest_client = crate::ReqwestClient::new();
+        let client = AsyncClient::new(URL, reqwest_client);
+
+        let height = client.get_tip_height().await?;
+        let hash = client.get_tip_hash().await?;
+
+        dbg!((height, hash));
+
+        Ok(())
+    }
+}
