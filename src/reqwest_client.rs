@@ -7,6 +7,12 @@ pub struct ReqwestClient {
     pub inner: reqwest::Client,
 }
 
+impl Default for ReqwestClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ReqwestClient {
     /// New.
     pub fn new() -> Self {
@@ -21,45 +27,32 @@ impl Transport for ReqwestClient {
 
     type Err = reqwest::Error;
 
-    fn get<'a>(&'a self, path: &'a str) -> impl Future<Output = Result<Self::Resp, Self::Err>>
+    async fn get<'a>(&'a self, path: &'a str) -> Result<Self::Resp, Self::Err>
     where
         Self: 'a,
     {
-        async move { self.inner.get(path).send().await }
+        self.inner.get(path).send().await
     }
 
-    fn post<'a>(
-        &'a self,
-        path: &'a str,
-        body: String,
-    ) -> impl Future<Output = Result<Self::Resp, Self::Err>>
+    async fn post<'a>(&'a self, path: &'a str, body: String) -> Result<Self::Resp, Self::Err>
     where
         Self: 'a,
     {
-        async move { Ok(self.inner.post(path).body(body).send().await?) }
+        self.inner.post(path).body(body).send().await
     }
 
-    fn parse_response_text(
-        &self,
-        resp: Self::Resp,
-    ) -> impl Future<Output = Result<String, Self::Err>> {
-        async move { resp.text().await }
+    async fn parse_response_text(&self, resp: Self::Resp) -> Result<String, Self::Err> {
+        resp.text().await
     }
 
-    fn parse_response_raw(
-        &self,
-        resp: Self::Resp,
-    ) -> impl Future<Output = Result<Vec<u8>, Self::Err>> {
-        async move { Ok(resp.bytes().await?.to_vec()) }
+    async fn parse_response_raw(&self, resp: Self::Resp) -> Result<Vec<u8>, Self::Err> {
+        Ok(resp.bytes().await?.to_vec())
     }
 
-    fn parse_response_json<'a, O>(
-        &'a self,
-        resp: Self::Resp,
-    ) -> impl Future<Output = Result<O, Self::Err>>
+    async fn parse_response_json<'a, O>(&'a self, resp: Self::Resp) -> Result<O, Self::Err>
     where
         O: for<'de> serde::Deserialize<'de> + 'a,
     {
-        async move { resp.json().await }
+        resp.json().await
     }
 }
