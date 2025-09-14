@@ -1,6 +1,6 @@
 //! [`AsyncClient`].
 
-use bitcoin::{Address, BlockHash, Transaction, Txid, consensus};
+use bitcoin::{Address, Block, BlockHash, Transaction, Txid, block::Header, consensus};
 
 use crate::Error;
 use crate::Transport;
@@ -23,7 +23,7 @@ impl<T: Transport> AsyncClient<T> {
         }
     }
 
-    /// GET `/tx/<:txid>/hex`.
+    /// GET `/tx/:txid/hex`.
     pub async fn get_raw_transaction(&self, txid: Txid) -> Result<Transaction, Error<T>> {
         let path = format!("{}/tx/{txid}/hex", self.url);
         let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
@@ -33,7 +33,7 @@ impl<T: Transport> AsyncClient<T> {
             .await
             .map_err(Error::Transport)?;
 
-        consensus::encode::deserialize_hex(&hex).map_err(Error::Decode)
+        consensus::encode::deserialize_hex(&hex).map_err(Error::DecodeHex)
     }
 
     /// GET `/blocks/tip/hash`.
@@ -49,7 +49,21 @@ impl<T: Transport> AsyncClient<T> {
         s.parse().map_err(Error::HexToArray)
     }
 
-    /// GET `/address/<:address>/txs`.
+    /// GET `/blocks/tip/height`.
+    pub async fn get_tip_height(&self) -> Result<u32, Error<T>> {
+        let path = format!("{}/blocks/tip/height", self.url);
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+
+        Ok(self
+            .tx
+            .parse_response_text(resp)
+            .await
+            .map_err(Error::Transport)?
+            .parse::<u32>()
+            .unwrap())
+    }
+
+    /// GET `/address/:address/txs`.
     pub async fn get_address_txs(&self, address: Address) -> Result<Vec<AddressTx>, Error<T>> {
         let path = format!("{}/address/{address}/txs", self.url);
         let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
@@ -71,10 +85,51 @@ impl<T: Transport> AsyncClient<T> {
             .map_err(Error::Transport)
     }
 
+    /// GET `/mempool/txids`.
+    pub async fn get_mempool_txids(&self) -> Result<Vec<Txid>, Error<T>> {
+        let path = format!("{}/mempool/txids", self.url);
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let txids: Vec<String> = self
+            .tx
+            .parse_response_json(resp)
+            .await
+            .map_err(Error::Transport)?;
+        txids
+            .into_iter()
+            .map(|s| s.parse().map_err(Error::HexToArray))
+            .collect()
+    }
+
+    /// GET `/block/:hash/header`.
+    pub async fn get_block_header(&self, hash: BlockHash) -> Result<Header, Error<T>> {
+        let path = format!("{}/block/{}/header", self.url, hash);
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let hex = self
+            .tx
+            .parse_response_text(resp)
+            .await
+            .map_err(Error::Transport)?;
+
+        consensus::encode::deserialize_hex(&hex).map_err(Error::DecodeHex)
+    }
+
+    /// GET `/block/:hash/raw`.
+    pub async fn get_block(&self, hash: BlockHash) -> Result<Block, Error<T>> {
+        let path = format!("{}/block/{}/raw", self.url, hash);
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let bytes = self
+            .tx
+            .parse_response_raw(resp)
+            .await
+            .map_err(Error::Transport)?;
+
+        consensus::encode::deserialize(&bytes).map_err(Error::Decode)
+    }
+
     /// POST `/tx`.
     pub async fn broadcast(&self, tx: &bitcoin::Transaction) -> Result<String, Error<T>> {
         let path = format!("{}/tx", self.url);
-        let hex = bitcoin::consensus::encode::serialize_hex(tx);
+        let hex = consensus::encode::serialize_hex(tx);
         let resp = self.tx.post(&path, hex).await.map_err(Error::Transport)?;
 
         self.tx

@@ -46,6 +46,13 @@ impl Transport for ReqwestClient {
         async move { resp.text().await }
     }
 
+    fn parse_response_raw(
+        &self,
+        resp: Self::Resp,
+    ) -> impl Future<Output = Result<Vec<u8>, Self::Err>> {
+        async move { Ok(resp.bytes().await?.to_vec()) }
+    }
+
     fn parse_response_json<'a, O>(
         &'a self,
         resp: Self::Resp,
