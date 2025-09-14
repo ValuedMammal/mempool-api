@@ -94,3 +94,101 @@ pub struct Status {
     /// Block time (UNIX timestamp) if confirmed.
     pub block_time: Option<u64>,
 }
+
+/// Represents mempool statistics from `/api/mempool`.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MempoolStats {
+    /// Number of transactions in the mempool.
+    pub count: u64,
+    /// Total virtual size of all mempool transactions.
+    pub vsize: u64,
+    /// Total fees in the mempool (sats).
+    pub total_fee: u64,
+    /// Fee histogram (array of (fee_rate, vsize) pairs).
+    pub fee_histogram: Vec<(f64, u64)>,
+}
+
+// // TODO
+// // =====================
+// // Additional API Models
+// // =====================
+
+// /// Represents a Bitcoin transaction from `/api/tx/:txid`.
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct Transaction {
+//     /// Transaction ID (hex).
+//     pub txid: String,
+//     /// Transaction version.
+//     pub version: u32,
+//     /// Transaction locktime.
+//     pub locktime: u32,
+//     /// Transaction size in bytes.
+//     pub size: u32,
+//     /// Transaction weight (for segwit).
+//     pub weight: u32,
+//     /// Transaction fee in satoshis.
+//     pub fee: u64,
+//     /// List of transaction inputs.
+//     pub vin: Vec<Vin>,
+//     /// List of transaction outputs.
+//     pub vout: Vec<Vout>,
+//     /// Confirmation status and block info.
+//     pub status: Status,
+// }
+
+// /// Represents a Bitcoin block from `/api/block/:hash`.
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct Block {
+//     /// Block hash (hex).
+//     pub id: String,
+//     /// Block height.
+//     pub height: u32,
+//     /// Block version.
+//     pub version: u32,
+//     /// Block timestamp (UNIX).
+//     pub timestamp: u64,
+//     /// Number of transactions in the block.
+//     pub tx_count: u32,
+//     /// Block size in bytes.
+//     pub size: u32,
+//     /// Block weight.
+//     pub weight: u32,
+//     /// Merkle root (hex).
+//     pub merkle_root: String,
+//     /// Previous block hash (hex).
+//     pub previousblockhash: String,
+//     /// Median time past.
+//     pub mediantime: u64,
+//     /// Block nonce.
+//     pub nonce: u64,
+//     /// Block bits (difficulty target).
+//     pub bits: u32,
+//     /// Block difficulty.
+//     pub difficulty: f64,
+// }
+
+// /// Represents address details from `/api/address/:address`.
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct AddressInfo {
+//     /// The address string.
+//     pub address: String,
+//     /// On-chain stats.
+//     pub chain_stats: AddressStats,
+//     /// Mempool stats.
+//     pub mempool_stats: AddressStats,
+// }
+
+// /// Stats for an address (used in both chain and mempool).
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct AddressStats {
+//     /// Number of funded outputs.
+//     pub funded_txo_count: u64,
+//     /// Sum of funded outputs (sats).
+//     pub funded_txo_sum: u64,
+//     /// Number of spent outputs.
+//     pub spent_txo_count: u64,
+//     /// Sum of spent outputs (sats).
+//     pub spent_txo_sum: u64,
+//     /// Number of transactions.
+//     pub tx_count: u64,
+// }

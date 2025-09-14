@@ -2,11 +2,16 @@
 
 use core::fmt::{self, Debug};
 
-use bitcoin::{Address, Script, Block, BlockHash, Transaction, Txid, block::Header, consensus, hashes::{Hash, sha256}};
+use bitcoin::{
+    Address, Block, BlockHash, Script, Transaction, Txid,
+    block::Header,
+    consensus,
+    hashes::{Hash, sha256},
+};
 
 use crate::Error;
 use crate::Transport;
-use crate::api::{AddressTx, RecommendedFees};
+use crate::api::{AddressTx, MempoolStats, RecommendedFees};
 
 /// Async client, generic over the [`Transport`].
 pub struct AsyncClient<T> {
@@ -103,6 +108,17 @@ impl<T: Transport> AsyncClient<T> {
     /// GET `/fees/recommended`.
     pub async fn get_recommended_fees(&self) -> Result<RecommendedFees, Error<T::Err>> {
         let path = format!("{}/v1/fees/recommended", self.url);
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+
+        self.tx
+            .parse_response_json(resp)
+            .await
+            .map_err(Error::Transport)
+    }
+
+    /// GET `/mempool`.
+    pub async fn get_mempool_info(&self) -> Result<MempoolStats, Error<T::Err>> {
+        let path = format!("{}/mempool", self.url);
         let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
 
         self.tx
