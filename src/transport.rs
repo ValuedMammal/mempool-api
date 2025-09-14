@@ -31,6 +31,12 @@ pub trait Transport {
         resp: Self::Resp,
     ) -> impl Future<Output = Result<String, Self::Err>>;
 
+    /// Parse a future response body as raw binary data.
+    fn parse_response_raw(
+        &self,
+        resp: Self::Resp,
+    ) -> impl Future<Output = Result<Vec<u8>, Self::Err>>;
+
     /// Parse a future response output that can be deserialized.
     fn parse_response_json<'a, O>(
         &'a self,
