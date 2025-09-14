@@ -5,9 +5,10 @@ mod client;
 mod error;
 #[cfg(feature = "reqwest")]
 mod reqwest_client;
+mod transport;
 #[cfg(feature = "reqwest")]
 pub use reqwest_client::*;
 
-pub use api::Transport;
 pub use client::*;
 pub use error::*;
+pub use transport::*;
