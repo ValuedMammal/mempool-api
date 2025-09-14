@@ -1,6 +1,6 @@
 //! [`AsyncClient`].
 
-use bitcoin::{Address, BlockHash};
+use bitcoin::{Address, BlockHash, Transaction, Txid, consensus};
 
 use crate::Error;
 use crate::Transport;
@@ -21,6 +21,19 @@ impl<T: Transport> AsyncClient<T> {
             url: url.to_string(),
             tx,
         }
+    }
+
+    /// GET `/tx/<:txid>/hex`.
+    pub async fn get_raw_transaction(&self, txid: Txid) -> Result<Transaction, Error<T>> {
+        let path = format!("{}/tx/{txid}/hex", self.url);
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let hex = self
+            .tx
+            .parse_response_text(resp)
+            .await
+            .map_err(Error::Transport)?;
+
+        consensus::encode::deserialize_hex(&hex).map_err(Error::Decode)
     }
 
     /// GET `/blocks/tip/hash`.
