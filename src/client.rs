@@ -1,10 +1,10 @@
 //! [`AsyncClient`].
 
-use bitcoin::BlockHash;
+use bitcoin::{Address, BlockHash};
 
 use crate::Error;
 use crate::Transport;
-use crate::api::RecommendedFees;
+use crate::api::{AddressTx, RecommendedFees};
 
 /// Async client, generic over the [`Transport`].
 pub struct AsyncClient<T> {
@@ -34,6 +34,17 @@ impl<T: Transport> AsyncClient<T> {
             .map_err(Error::Transport)?;
 
         s.parse().map_err(Error::HexToArray)
+    }
+
+    /// GET `/address/<:address>/txs`.
+    pub async fn get_address_txs(&self, address: Address) -> Result<Vec<AddressTx>, Error<T>> {
+        let path = format!("{}/address/{address}/txs", self.url);
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+
+        self.tx
+            .parse_response_json(resp)
+            .await
+            .map_err(Error::Transport)
     }
 
     /// GET `/fees/recommended`.
