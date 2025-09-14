@@ -2,7 +2,7 @@
 
 use core::fmt::{self, Debug};
 
-use bitcoin::{Address, Block, BlockHash, Transaction, Txid, block::Header, consensus};
+use bitcoin::{Address, Script, Block, BlockHash, Transaction, Txid, block::Header, consensus, hashes::{Hash, sha256}};
 
 use crate::Error;
 use crate::Transport;
@@ -72,6 +72,21 @@ impl<T: Transport> AsyncClient<T> {
             .map_err(Error::Transport)?
             .parse::<u32>()
             .unwrap())
+    }
+
+    /// GET `/scripthash/:hex/txs`.
+    pub async fn get_scripthash_txs(
+        &self,
+        script: &Script,
+    ) -> Result<Vec<AddressTx>, Error<T::Err>> {
+        let script_hash = sha256::Hash::hash(script.as_bytes());
+        let path = format!("{}/scripthash/{:x}/txs", self.url, script_hash);
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+
+        self.tx
+            .parse_response_json(resp)
+            .await
+            .map_err(Error::Transport)
     }
 
     /// GET `/address/:address/txs`.

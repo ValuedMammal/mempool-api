@@ -76,6 +76,7 @@ pub struct Vout {
     /// Type of the scriptPubKey (e.g., p2pkh).
     pub scriptpubkey_type: String,
     /// Address associated with the scriptPubKey.
+    #[serde(default)]
     pub scriptpubkey_address: String,
     /// Value of the output in satoshis.
     pub value: u64,
