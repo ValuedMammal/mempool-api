@@ -1,5 +1,6 @@
 use core::fmt::{Debug, Display};
 use core::future::Future;
+use core::ops::Deref;
 
 use serde::Deserialize;
 
@@ -44,4 +45,56 @@ pub trait Transport {
     ) -> impl Future<Output = Result<O, Self::Err>>
     where
         O: for<'de> Deserialize<'de> + 'a;
+}
+
+impl<T> Transport for T
+where
+    T: Deref,
+    T::Target: Transport,
+{
+    type Resp = <T::Target as Transport>::Resp;
+
+    type Err = <T::Target as Transport>::Err;
+
+    fn get<'a>(&'a self, path: &'a str) -> impl Future<Output = Result<Self::Resp, Self::Err>>
+    where
+        Self: 'a,
+    {
+        (**self).get(path)
+    }
+
+    fn post<'a>(
+        &'a self,
+        path: &'a str,
+        body: String,
+    ) -> impl Future<Output = Result<Self::Resp, Self::Err>>
+    where
+        Self: 'a,
+    {
+        (**self).post(path, body)
+    }
+
+    fn parse_response_text(
+        &self,
+        resp: Self::Resp,
+    ) -> impl Future<Output = Result<String, Self::Err>> {
+        (**self).parse_response_text(resp)
+    }
+
+    fn parse_response_raw(
+        &self,
+        resp: Self::Resp,
+    ) -> impl Future<Output = Result<Vec<u8>, Self::Err>> {
+        (**self).parse_response_raw(resp)
+    }
+
+    fn parse_response_json<'a, O>(
+        &'a self,
+        resp: Self::Resp,
+    ) -> impl Future<Output = Result<O, Self::Err>>
+    where
+        O: for<'de> Deserialize<'de> + 'a,
+    {
+        (**self).parse_response_json(resp)
+    }
 }
