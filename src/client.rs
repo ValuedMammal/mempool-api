@@ -84,7 +84,10 @@ impl<T: Transport> AsyncClient<T> {
     }
 
     /// GET `/address/:address/txs`.
-    pub async fn get_address_txs(&self, address: Address) -> Result<Vec<AddressTx>, Error<T::Err>> {
+    pub async fn get_address_txs(
+        &self,
+        address: &Address,
+    ) -> Result<Vec<AddressTx>, Error<T::Err>> {
         let path = format!("{}/address/{address}/txs", self.url);
         let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
 
