@@ -1,6 +1,6 @@
 //! [`api`](self).
 
-use bitcoin::Txid;
+use bitcoin::{BlockHash, Txid};
 use serde::{Deserialize, Serialize};
 
 /// Represents response to GET Recommended Fees.
@@ -91,7 +91,7 @@ pub struct Status {
     /// Block height if confirmed.
     pub block_height: Option<u32>,
     /// Block hash if confirmed.
-    pub block_hash: Option<String>,
+    pub block_hash: Option<BlockHash>,
     /// Block time (UNIX timestamp) if confirmed.
     pub block_time: Option<u64>,
 }
@@ -136,7 +136,7 @@ pub struct Transaction {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
     /// Block hash (hex).
-    pub id: String,
+    pub id: BlockHash,
     /// Block height.
     pub height: u32,
     /// Block version.
@@ -152,7 +152,7 @@ pub struct Block {
     /// Merkle root (hex).
     pub merkle_root: String,
     /// Previous block hash (hex).
-    pub previousblockhash: String,
+    pub previousblockhash: BlockHash,
     /// Median time past.
     pub mediantime: u64,
     /// Block nonce.
