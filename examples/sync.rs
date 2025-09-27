@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
                     loop {
                         let txs = client.get_address_txs(&addr, after_txid).await?;
                         let tx_ct = txs.len();
-                        after_txid = txs.last().map(|tx| tx.txid.parse().unwrap());
+                        after_txid = txs.last().map(|tx| tx.txid);
                         res_txs.extend(txs);
                         if tx_ct < 25 {
                             break;

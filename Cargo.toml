@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 
 [dependencies]
-bitcoin = { version = "0.32.7", default-features = false }
+bitcoin = { version = "0.32.7", default-features = false, features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 thiserror = "1"
 

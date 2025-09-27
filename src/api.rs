@@ -1,5 +1,6 @@
 //! [`api`](self).
 
+use bitcoin::Txid;
 use serde::{Deserialize, Serialize};
 
 /// Represents response to GET Recommended Fees.
@@ -26,7 +27,7 @@ pub struct RecommendedFees {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AddressTx {
     /// Transaction ID (txid) as a hex string.
-    pub txid: String,
+    pub txid: Txid,
     /// Transaction version number.
     pub version: u32,
     /// Transaction locktime.
@@ -51,7 +52,7 @@ pub struct AddressTx {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Vin {
     /// Previous transaction ID referenced by this input.
-    pub txid: String,
+    pub txid: Txid,
     /// Output index in the previous transaction.
     pub vout: u32,
     /// Previous output details.
@@ -112,7 +113,7 @@ pub struct MempoolStats {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Transaction {
     /// Transaction ID (hex).
-    pub txid: String,
+    pub txid: Txid,
     /// Transaction version.
     pub version: u32,
     /// Transaction locktime.
