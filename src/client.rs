@@ -75,9 +75,13 @@ impl<T: Transport> AsyncClient<T> {
     pub async fn get_scripthash_txs(
         &self,
         script: &Script,
+        after_txid: Option<Txid>,
     ) -> Result<Vec<AddressTx>, Error<T::Err>> {
         let script_hash = sha256::Hash::hash(script.as_bytes());
-        let path = format!("{}/scripthash/{:x}/txs", self.url, script_hash);
+        let path = match after_txid {
+            Some(txid) => format!("{}/scripthash/{script_hash:x}/txs/chain/{txid}", self.url),
+            None => format!("{}/scripthash/{script_hash:x}/txs", self.url),
+        };
         let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
 
         self.tx.parse_response_json(resp).await.map_err(Error::Transport)
@@ -87,8 +91,12 @@ impl<T: Transport> AsyncClient<T> {
     pub async fn get_address_txs(
         &self,
         address: &Address,
+        after_txid: Option<Txid>,
     ) -> Result<Vec<AddressTx>, Error<T::Err>> {
-        let path = format!("{}/address/{address}/txs", self.url);
+        let path = match after_txid {
+            Some(txid) => format!("{}/address/{address}/txs?after_txid={txid}", self.url),
+            None => format!("{}/address/{address}/txs", self.url),
+        };
         let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
 
         self.tx.parse_response_json(resp).await.map_err(Error::Transport)
