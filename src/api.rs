@@ -1,6 +1,6 @@
 //! [`api`](self).
 
-use bitcoin::{BlockHash, Txid};
+use bitcoin::{BlockHash, ScriptBuf, Txid};
 use serde::{Deserialize, Serialize};
 
 /// Represents response to GET Recommended Fees.
@@ -58,7 +58,7 @@ pub struct Vin {
     /// Previous output details.
     pub prevout: Vout,
     /// Script signature as a hex string.
-    pub scriptsig: String,
+    pub scriptsig: ScriptBuf,
     /// Script signature in ASM format.
     pub scriptsig_asm: String,
     /// True if this is a coinbase input.
@@ -71,7 +71,7 @@ pub struct Vin {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Vout {
     /// ScriptPubKey as a hex string.
-    pub scriptpubkey: String,
+    pub scriptpubkey: ScriptBuf,
     /// ScriptPubKey in ASM format.
     pub scriptpubkey_asm: String,
     /// Type of the scriptPubKey (e.g., p2pkh).
