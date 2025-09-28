@@ -111,7 +111,7 @@ pub struct MempoolStats {
 
 /// Represents a Bitcoin transaction from Get Transaction.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Transaction {
+pub struct TxInfo {
     /// Transaction ID (hex).
     pub txid: Txid,
     /// Transaction version.
@@ -134,8 +134,8 @@ pub struct Transaction {
 
 /// Represents a Bitcoin block from Get Block.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Block {
-    /// Block hash (hex).
+pub struct BlockSummary {
+    /// Block hash.
     pub id: BlockHash,
     /// Block height.
     pub height: u32,
