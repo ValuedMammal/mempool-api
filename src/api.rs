@@ -1,6 +1,6 @@
 //! [`api`](self).
 
-use bitcoin::{BlockHash, ScriptBuf, Txid};
+use bitcoin::{BlockHash, ScriptBuf, TxMerkleNode, Txid};
 use serde::{Deserialize, Serialize};
 
 /// Represents response to GET Recommended Fees.
@@ -147,10 +147,10 @@ pub struct BlockSummary {
     pub tx_count: u32,
     /// Block size in bytes.
     pub size: u32,
-    /// Block weight.
+    /// Block weight (WU).
     pub weight: u32,
-    /// Merkle root (hex).
-    pub merkle_root: String,
+    /// Merkle root.
+    pub merkle_root: TxMerkleNode,
     /// Previous block hash (hex).
     pub previousblockhash: BlockHash,
     /// Median time past.
