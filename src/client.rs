@@ -199,10 +199,8 @@ mod test {
         let reqwest_client = crate::ReqwestClient::new();
         let client = AsyncClient::new(URL, reqwest_client);
 
-        let height = client.get_tip_height().await?;
-        let hash = client.get_tip_hash().await?;
-
-        dbg!((height, hash));
+        let _ = client.get_tip_height().await?;
+        let _ = client.get_tip_hash().await?;
 
         Ok(())
     }
