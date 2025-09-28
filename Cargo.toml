@@ -34,3 +34,6 @@ reqwest = ["dep:reqwest", "dep:tokio"]
 
 [[example]]
 name = "client"
+
+[[example]]
+name = "sync"
