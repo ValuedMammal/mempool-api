@@ -79,15 +79,15 @@ impl Transport for ReqwestClient {
         self.inner.post(path).body(body).send().await
     }
 
-    async fn parse_response_text(&self, resp: Self::Resp) -> Result<String, Self::Err> {
+    async fn handle_response_text(&self, resp: Self::Resp) -> Result<String, Self::Err> {
         resp.text().await
     }
 
-    async fn parse_response_raw(&self, resp: Self::Resp) -> Result<Vec<u8>, Self::Err> {
+    async fn handle_response_raw(&self, resp: Self::Resp) -> Result<Vec<u8>, Self::Err> {
         Ok(resp.bytes().await?.to_vec())
     }
 
-    async fn parse_response_json<'a, O>(&'a self, resp: Self::Resp) -> Result<O, Self::Err>
+    async fn handle_response_json<'a, O>(&'a self, resp: Self::Resp) -> Result<O, Self::Err>
     where
         O: for<'de> serde::Deserialize<'de> + 'a,
     {

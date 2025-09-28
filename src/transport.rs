@@ -26,20 +26,20 @@ pub trait Transport {
     where
         Self: 'a;
 
-    /// Parse a future response body as a UTF-8 string.
-    fn parse_response_text(
+    /// Handle a future response body as a UTF-8 string.
+    fn handle_response_text(
         &self,
         resp: Self::Resp,
     ) -> impl Future<Output = Result<String, Self::Err>>;
 
-    /// Parse a future response body as raw binary data.
-    fn parse_response_raw(
+    /// Handle a future response body as raw binary data.
+    fn handle_response_raw(
         &self,
         resp: Self::Resp,
     ) -> impl Future<Output = Result<Vec<u8>, Self::Err>>;
 
-    /// Parse a future response output that can be deserialized.
-    fn parse_response_json<'a, O>(
+    /// Handle a future response output that can be deserialized.
+    fn handle_response_json<'a, O>(
         &'a self,
         resp: Self::Resp,
     ) -> impl Future<Output = Result<O, Self::Err>>
@@ -74,27 +74,27 @@ where
         (**self).post(path, body)
     }
 
-    fn parse_response_text(
+    fn handle_response_text(
         &self,
         resp: Self::Resp,
     ) -> impl Future<Output = Result<String, Self::Err>> {
-        (**self).parse_response_text(resp)
+        (**self).handle_response_text(resp)
     }
 
-    fn parse_response_raw(
+    fn handle_response_raw(
         &self,
         resp: Self::Resp,
     ) -> impl Future<Output = Result<Vec<u8>, Self::Err>> {
-        (**self).parse_response_raw(resp)
+        (**self).handle_response_raw(resp)
     }
 
-    fn parse_response_json<'a, O>(
+    fn handle_response_json<'a, O>(
         &'a self,
         resp: Self::Resp,
     ) -> impl Future<Output = Result<O, Self::Err>>
     where
         O: for<'de> Deserialize<'de> + 'a,
     {
-        (**self).parse_response_json(resp)
+        (**self).handle_response_json(resp)
     }
 }
