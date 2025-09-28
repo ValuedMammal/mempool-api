@@ -1,5 +1,8 @@
 use crate::Transport;
 
+pub extern crate reqwest;
+pub extern crate tokio;
+
 /// Base backoff in milliseconds.
 const BASE_BACKOFF_MILLIS: u64 = 256;
 /// Default max retries.
