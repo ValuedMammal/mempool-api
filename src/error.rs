@@ -3,21 +3,27 @@
 use bitcoin::{consensus, hex};
 
 /// Errors that can occur in this library.
-#[derive(thiserror::Error, Debug)]
+#[derive(Debug)]
 pub enum Error<E> {
-    /// API error.
-    #[error("API error: {0}")]
-    Api(String),
     /// `bitcoin::consensus` encoding error.
-    #[error("encoding error: {0}")]
     Decode(consensus::encode::Error),
     /// `bitcoin::consensus` encoding error (from hex).
-    #[error("encoding error: {0}")]
     DecodeHex(consensus::encode::FromHexError),
-    /// Transport error.
-    #[error("transport error: {0:?}")]
-    Transport(E),
     /// Converting from hex
-    #[error("hex to array error: {0}")]
     HexToArray(hex::HexToArrayError),
+    /// Transport error.
+    Transport(E),
 }
+
+impl<E: core::fmt::Display> core::fmt::Display for Error<E> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Decode(e) => write!(f, "{e}"),
+            Self::DecodeHex(e) => write!(f, "{e}"),
+            Self::HexToArray(e) => write!(f, "{e}"),
+            Self::Transport(e) => write!(f, "{e}"),
+        }
+    }
+}
+
+impl<E> std::error::Error for Error<E> where E: core::fmt::Debug + core::fmt::Display {}
