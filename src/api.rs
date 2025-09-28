@@ -110,6 +110,7 @@ pub struct MempoolStats {
 }
 
 /// Represents a Bitcoin transaction from Get Transaction.
+// Note: This is the same as AddressTx.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TxInfo {
     /// Transaction ID (hex).
@@ -118,16 +119,18 @@ pub struct TxInfo {
     pub version: u32,
     /// Transaction locktime.
     pub locktime: u32,
-    /// Transaction size in bytes.
-    pub size: u32,
-    /// Transaction weight (for segwit).
-    pub weight: u32,
-    /// Transaction fee in satoshis.
-    pub fee: u64,
     /// List of transaction inputs.
     pub vin: Vec<Vin>,
     /// List of transaction outputs.
     pub vout: Vec<Vout>,
+    /// Transaction size in bytes.
+    pub size: u32,
+    /// Transaction weight (for segwit).
+    pub weight: u32,
+    /// Number of signature operations.
+    pub sigops: u64,
+    /// Transaction fee in satoshis.
+    pub fee: u64,
     /// Confirmation status and block info.
     pub status: Status,
 }

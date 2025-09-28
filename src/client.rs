@@ -48,6 +48,14 @@ impl<T: Transport> AsyncClient<T> {
         consensus::encode::deserialize_hex(&hex).map_err(Error::DecodeHex)
     }
 
+    /// GET `/tx/:txid`.
+    pub async fn get_tx_info(&self, txid: &Txid) -> Result<TxInfo, Error<T::Err>> {
+        let path = format!("{}/tx/{txid}", self.url);
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+
+        self.tx.parse_response_json(resp).await.map_err(Error::Transport)
+    }
+
     /// GET `/blocks/tip/hash`.
     pub async fn get_tip_hash(&self) -> Result<BlockHash, Error<T::Err>> {
         let path = format!("{}/blocks/tip/hash", self.url);
