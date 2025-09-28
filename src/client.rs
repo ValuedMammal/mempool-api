@@ -11,7 +11,7 @@ use bitcoin::{
 
 use crate::Error;
 use crate::Transport;
-use crate::api::{AddressInfo, AddressTx, MempoolStats, RecommendedFees};
+use crate::api::{AddressInfo, AddressTx, BlockSummary, MempoolStats, RecommendedFees, TxInfo};
 
 /// Async client, generic over the [`Transport`].
 pub struct AsyncClient<T> {
@@ -154,6 +154,20 @@ impl<T: Transport> AsyncClient<T> {
         let bytes = self.tx.parse_response_raw(resp).await.map_err(Error::Transport)?;
 
         consensus::encode::deserialize(&bytes).map_err(Error::Decode)
+    }
+
+    /// GET `/blocks/[:height]`.
+    pub async fn get_blocks(
+        &self,
+        height: Option<u32>,
+    ) -> Result<Vec<BlockSummary>, Error<T::Err>> {
+        let path = match height {
+            Some(height) => format!("{}/blocks/{height}", self.url),
+            None => format!("{}/blocks", self.url),
+        };
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+
+        self.tx.parse_response_json(resp).await.map_err(Error::Transport)
     }
 
     /// POST `/tx`.
