@@ -40,7 +40,7 @@ impl<T: Transport> AsyncClient<T> {
     }
 
     /// GET `/tx/:txid/hex`.
-    pub async fn get_raw_transaction(&self, txid: Txid) -> Result<Transaction, Error<T::Err>> {
+    pub async fn get_tx(&self, txid: &Txid) -> Result<Transaction, Error<T::Err>> {
         let path = format!("{}/tx/{txid}/hex", self.url);
         let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
         let hex = self.tx.parse_response_text(resp).await.map_err(Error::Transport)?;
