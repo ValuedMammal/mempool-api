@@ -11,7 +11,7 @@ use bitcoin::{
 
 use crate::Error;
 use crate::Transport;
-use crate::api::{AddressTx, MempoolStats, RecommendedFees};
+use crate::api::{AddressInfo, AddressTx, MempoolStats, RecommendedFees};
 
 /// Async client, generic over the [`Transport`].
 pub struct AsyncClient<T> {
@@ -97,6 +97,14 @@ impl<T: Transport> AsyncClient<T> {
             Some(txid) => format!("{}/address/{address}/txs?after_txid={txid}", self.url),
             None => format!("{}/address/{address}/txs", self.url),
         };
+        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+
+        self.tx.parse_response_json(resp).await.map_err(Error::Transport)
+    }
+
+    /// GET `/address/:address`.
+    pub async fn get_address_info(&self, address: &Address) -> Result<AddressInfo, Error<T::Err>> {
+        let path = format!("{}/address/{address}", self.url);
         let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
 
         self.tx.parse_response_json(resp).await.map_err(Error::Transport)
