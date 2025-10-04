@@ -191,3 +191,51 @@ pub struct AddressStats {
     /// Number of transactions.
     pub tx_count: u64,
 }
+
+/// Represents a response to Get Transaction Merkle Proof.
+#[derive(Debug, Deserialize)]
+pub struct MerkleProof {
+    /// Block height.
+    pub block_height: u32,
+    /// Merkle proof.
+    pub merkle: Vec<Txid>,
+    /// Index of the corresponding transaction in block.
+    pub pos: usize,
+}
+
+/// Represents an element in the response to Get Address UTXO.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AddressUtxo {
+    /// Transaction ID (txid) as a hex string.
+    pub txid: Txid,
+    /// Output index in the transaction.
+    pub vout: u32,
+    /// Value of the output in satoshis.
+    pub value: u64,
+    /// Status of the UTXO (confirmation info).
+    pub status: Status,
+}
+
+/// Represents response to Get Transaction Outspend.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct OutputStatus {
+    /// True if the output has been spent.
+    pub spent: bool,
+    /// Transaction ID of the spending transaction (if spent).
+    pub txid: Option<Txid>,
+    /// Input index in the spending transaction (if spent).
+    pub vin: Option<u32>,
+    /// Status of the spending transaction (if spent).
+    pub status: Option<Status>,
+}
+
+/// Represents response to Get Block Status.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BlockStatus {
+    /// True if the block is in the best chain.
+    pub in_best_chain: bool,
+    /// Height of the block.
+    pub height: Option<u32>,
+    /// Block hash of the next block in the best chain.
+    pub next_best: Option<BlockHash>,
+}
