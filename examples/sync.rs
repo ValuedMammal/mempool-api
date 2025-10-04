@@ -1,6 +1,4 @@
-#![allow(unused)]
-
-use bitcoin::{Address, ScriptBuf};
+use bitcoin::{Address, Network, ScriptBuf, secp256k1};
 use futures::{TryStreamExt, stream::FuturesOrdered};
 use mempool_space_api::{AsyncClient, api::AddressTx};
 use miniscript::descriptor::Descriptor;
@@ -16,14 +14,13 @@ async fn main() -> anyhow::Result<()> {
     let reqwest_client = mempool_space_api::ReqwestClient::default();
     let client = AsyncClient::new(URL, &reqwest_client);
 
-    let s = "wpkh(tprv8ZgxMBicQKsPdy6LMhUtFHAgpocR8GC6QmwMSFpZs7h6Eziw3SpThFfczTDh5rW2krkqffa11UpX3XkeTTB2FvzZKWXqPY54Y6Rq4AQ5R8L/84'/1'/0'/0/*)";
-    let secp = bitcoin::secp256k1::Secp256k1::new();
-    let desc = Descriptor::parse_descriptor(&secp, s)?.0;
+    let desc_str = "wpkh(tprv8ZgxMBicQKsPdy6LMhUtFHAgpocR8GC6QmwMSFpZs7h6Eziw3SpThFfczTDh5rW2krkqffa11UpX3XkeTTB2FvzZKWXqPY54Y6Rq4AQ5R8L/84'/1'/0'/0/*)";
+    let secp = secp256k1::Secp256k1::new();
+    let desc = Descriptor::parse_descriptor(&secp, desc_str)?.0;
 
-    let mut addrs = (0..1000).map(|i| {
+    let mut spks = (0..1000).map(|i| {
         let spk = desc.at_derivation_index(i).unwrap().script_pubkey();
-        let addr = bitcoin::Address::from_script(&spk, bitcoin::Network::Signet).unwrap();
-        (i, addr)
+        (i, spk)
     });
 
     let mut unused_ct = 0;
@@ -32,16 +29,16 @@ async fn main() -> anyhow::Result<()> {
     // Sync
     let client = Arc::new(client);
     loop {
-        let futures = addrs
+        let futures = spks
             .by_ref()
             .take(5)
-            .map(|(i, addr)| {
+            .map(|(i, spk)| {
                 let client = client.clone();
                 let mut res_txs = vec![];
                 let mut after_txid = None;
                 async move {
                     loop {
-                        let txs = client.get_address_txs(&addr, after_txid).await?;
+                        let txs = client.get_scripthash_txs(&spk, after_txid).await?;
                         let tx_ct = txs.len();
                         after_txid = txs.last().map(|tx| tx.txid);
                         res_txs.extend(txs);
@@ -49,25 +46,27 @@ async fn main() -> anyhow::Result<()> {
                             break;
                         }
                     }
-                    Ok::<(u32, Address, Vec<AddressTx>), anyhow::Error>((i, addr, res_txs))
+                    Ok::<(u32, ScriptBuf, Vec<AddressTx>), anyhow::Error>((i, spk, res_txs))
                 }
             })
             .collect::<FuturesOrdered<_>>();
 
-        for (i, addr, txs) in futures.try_collect::<Vec<_>>().await? {
+        for (index, script, txs) in futures.try_collect::<Vec<_>>().await? {
             if txs.is_empty() {
                 unused_ct += 1;
             } else {
-                last_active = Some(i);
+                last_active = Some(index);
             }
+            let addr = Address::from_script(&script, Network::Signet)?;
+            log::info!("Txs of index {index} address {addr}");
             for tx in txs {
-                dbg!(i, &addr, tx.txid);
+                log::info!("{}", tx.txid);
             }
         }
 
         // Gap limit reached
         if unused_ct > 20 {
-            dbg!(last_active);
+            log::info!("Last active index {:?}", last_active);
             break;
         }
     }
