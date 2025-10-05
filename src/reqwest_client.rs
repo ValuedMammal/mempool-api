@@ -62,21 +62,26 @@ impl ReqwestClient {
 impl Transport for ReqwestClient {
     type Resp = reqwest::Response;
 
-    // TODO: Consider make new Error type
     type Err = reqwest::Error;
 
     async fn get<'a>(&'a self, path: &'a str) -> Result<Self::Resp, Self::Err>
     where
         Self: 'a,
     {
-        self.send_retry(path).await
+        match self.send_retry(path).await?.error_for_status() {
+            Err(e) => Err(e),
+            resp => resp,
+        }
     }
 
     async fn post<'a>(&'a self, path: &'a str, body: String) -> Result<Self::Resp, Self::Err>
     where
         Self: 'a,
     {
-        self.inner.post(path).body(body).send().await
+        match self.inner.post(path).body(body).send().await?.error_for_status() {
+            Err(e) => Err(e),
+            resp => resp,
+        }
     }
 
     async fn handle_response_text(&self, resp: Self::Resp) -> Result<String, Self::Err> {
