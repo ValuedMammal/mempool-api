@@ -84,7 +84,7 @@ pub struct Vout {
 }
 
 /// Represents the confirmation status and block information for a transaction.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Status {
     /// True if the transaction is confirmed.
     pub confirmed: bool,
@@ -217,7 +217,7 @@ pub struct AddressUtxo {
 }
 
 /// Represents response to Get Transaction Outspend.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct OutputStatus {
     /// True if the output has been spent.
     pub spent: bool,
