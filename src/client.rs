@@ -45,8 +45,8 @@ impl<T: Transport> AsyncClient<T> {
     /// GET `/blocks/tip/hash`.
     pub async fn get_tip_hash(&self) -> Result<BlockHash, Error<T::Err>> {
         let path = format!("{}/blocks/tip/hash", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
-        let s = self.tx.handle_response_text(resp).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let s = String::from_utf8_lossy(body.as_ref());
 
         s.parse().map_err(Error::HexToArray)
     }
@@ -54,49 +54,44 @@ impl<T: Transport> AsyncClient<T> {
     /// GET `/blocks/tip/height`.
     pub async fn get_tip_height(&self) -> Result<u32, Error<T::Err>> {
         let path = format!("{}/blocks/tip/height", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let s = String::from_utf8_lossy(body.as_ref());
 
-        Ok(self
-            .tx
-            .handle_response_text(resp)
-            .await
-            .map_err(Error::Transport)?
-            .parse::<u32>()
-            .unwrap())
+        Ok(s.parse::<u32>().unwrap())
     }
 
     /// GET `/block-height/:height`.
     pub async fn get_block_hash(&self, height: u32) -> Result<BlockHash, Error<T::Err>> {
         let path = format!("{}/block-height/{height}", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
-        let hash = self.tx.handle_response_text(resp).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let s = String::from_utf8_lossy(body.as_ref());
 
-        hash.parse().map_err(Error::HexToArray)
+        s.parse().map_err(Error::HexToArray)
     }
 
     /// GET `/tx/:txid/hex`.
     pub async fn get_tx(&self, txid: &Txid) -> Result<Transaction, Error<T::Err>> {
         let path = format!("{}/tx/{txid}/hex", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
-        let hex = self.tx.handle_response_text(resp).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let s = String::from_utf8_lossy(body.as_ref());
 
-        consensus::encode::deserialize_hex(&hex).map_err(Error::DecodeHex)
+        consensus::encode::deserialize_hex(&s).map_err(Error::DecodeHex)
     }
 
     /// GET `/tx/:txid`.
     pub async fn get_tx_info(&self, txid: &Txid) -> Result<TxInfo, Error<T::Err>> {
         let path = format!("{}/tx/{txid}", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// GET `/tx/:txid/status`.
     pub async fn get_tx_status(&self, txid: &Txid) -> Result<Status, Error<T::Err>> {
         let path = format!("{}/tx/{txid}/status", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// GET `/tx/:txid/outspend/:vout`.
@@ -106,9 +101,9 @@ impl<T: Transport> AsyncClient<T> {
         vout: u32,
     ) -> Result<OutputStatus, Error<T::Err>> {
         let path = format!("{}/tx/{txid}/outspend/{vout}", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// GET `/scripthash/:hex/txs`.
@@ -122,9 +117,9 @@ impl<T: Transport> AsyncClient<T> {
             Some(txid) => format!("{}/scripthash/{script_hash:x}/txs/chain/{txid}", self.url),
             None => format!("{}/scripthash/{script_hash:x}/txs", self.url),
         };
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// GET `/address/:address/txs`.
@@ -137,9 +132,9 @@ impl<T: Transport> AsyncClient<T> {
             Some(txid) => format!("{}/address/{address}/txs?after_txid={txid}", self.url),
             None => format!("{}/address/{address}/txs", self.url),
         };
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// Get `address/:address/utxo`
@@ -148,41 +143,41 @@ impl<T: Transport> AsyncClient<T> {
         address: &Address,
     ) -> Result<Vec<AddressUtxo>, Error<T::Err>> {
         let path = format!("{}/address/{address}/utxo", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// GET `/address/:address`.
     pub async fn get_address_info(&self, address: &Address) -> Result<AddressInfo, Error<T::Err>> {
         let path = format!("{}/address/{address}", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// GET `/fees/recommended`.
     pub async fn get_recommended_fees(&self) -> Result<RecommendedFees, Error<T::Err>> {
         let path = format!("{}/v1/fees/recommended", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// GET `/mempool`.
     pub async fn get_mempool_info(&self) -> Result<MempoolStats, Error<T::Err>> {
         let path = format!("{}/mempool", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// GET `/mempool/txids`.
     pub async fn get_mempool_txids(&self) -> Result<Vec<Txid>, Error<T::Err>> {
         let path = format!("{}/mempool/txids", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
-        let txids: Vec<String> =
-            self.tx.handle_response_json(resp).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let txids: Vec<String> = serde_json::from_slice(body.as_ref()).map_err(Error::Json)?;
+
         txids
             .into_iter()
             .map(|s| s.parse().map_err(Error::HexToArray))
@@ -192,27 +187,26 @@ impl<T: Transport> AsyncClient<T> {
     /// GET `/block/:hash/header`.
     pub async fn get_block_header(&self, hash: &BlockHash) -> Result<Header, Error<T::Err>> {
         let path = format!("{}/block/{hash}/header", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
-        let hex = self.tx.handle_response_text(resp).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let s = String::from_utf8_lossy(body.as_ref());
 
-        consensus::encode::deserialize_hex(&hex).map_err(Error::DecodeHex)
+        consensus::encode::deserialize_hex(&s).map_err(Error::DecodeHex)
     }
 
     /// GET `/block/:hash/raw`.
     pub async fn get_block(&self, hash: &BlockHash) -> Result<Block, Error<T::Err>> {
         let path = format!("{}/block/{hash}/raw", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
-        let bytes = self.tx.handle_response_raw(resp).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        consensus::encode::deserialize(&bytes).map_err(Error::Decode)
+        consensus::encode::deserialize(body.as_ref()).map_err(Error::Decode)
     }
 
     /// GET `/block/:hash/status`.
     pub async fn get_block_status(&self, hash: &BlockHash) -> Result<BlockStatus, Error<T::Err>> {
         let path = format!("{}/block/{hash}/status", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// GET `/blocks/[:height]`.
@@ -224,26 +218,27 @@ impl<T: Transport> AsyncClient<T> {
             Some(height) => format!("{}/blocks/{height}", self.url),
             None => format!("{}/blocks", self.url),
         };
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// POST `/tx`.
-    pub async fn broadcast(&self, tx: &bitcoin::Transaction) -> Result<String, Error<T::Err>> {
+    pub async fn broadcast(&self, tx: &bitcoin::Transaction) -> Result<Txid, Error<T::Err>> {
         let path = format!("{}/tx", self.url);
         let hex = consensus::encode::serialize_hex(tx);
-        let resp = self.tx.post(&path, hex).await.map_err(Error::Transport)?;
+        let body = self.tx.post(&path, hex).await.map_err(Error::Transport)?;
+        let s = String::from_utf8_lossy(body.as_ref());
 
-        self.tx.handle_response_text(resp).await.map_err(Error::Transport)
+        s.parse().map_err(Error::HexToArray)
     }
 
     /// GET `/tx/:txid/merkle-proof`.
     pub async fn get_merkle_proof(&self, txid: &Txid) -> Result<MerkleProof, Error<T::Err>> {
         let path = format!("{}/tx/{txid}/merkle-proof", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
 
-        self.tx.handle_response_json(resp).await.map_err(Error::Transport)
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
     /// GET `/block/:hash/txid/:index`.
@@ -253,19 +248,19 @@ impl<T: Transport> AsyncClient<T> {
         index: usize,
     ) -> Result<Txid, Error<T::Err>> {
         let path = format!("{}/block/{hash}/txid/{index}", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
-        let txid = self.tx.handle_response_text(resp).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let s = String::from_utf8_lossy(body.as_ref());
 
-        txid.parse().map_err(Error::HexToArray)
+        s.parse().map_err(Error::HexToArray)
     }
 
     /// GET `/tx/:txid/merkleblock-proof`.
     pub async fn get_merkle_block(&self, txid: &Txid) -> Result<MerkleBlock, Error<T::Err>> {
         let path = format!("{}/tx/{txid}/merkleblock-proof", self.url);
-        let resp = self.tx.get(&path).await.map_err(Error::Transport)?;
-        let merkleblock_hex = self.tx.handle_response_text(resp).await.map_err(Error::Transport)?;
+        let body = self.tx.get(&path).await.map_err(Error::Transport)?;
+        let s = String::from_utf8_lossy(body.as_ref());
 
-        consensus::encode::deserialize_hex(&merkleblock_hex).map_err(Error::DecodeHex)
+        consensus::encode::deserialize_hex(&s).map_err(Error::DecodeHex)
     }
 }
 

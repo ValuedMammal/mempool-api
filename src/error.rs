@@ -9,8 +9,10 @@ pub enum Error<E> {
     Decode(consensus::encode::Error),
     /// `bitcoin::consensus` encoding error (from hex).
     DecodeHex(consensus::encode::FromHexError),
-    /// Converting from hex
+    /// Converting from hex to array
     HexToArray(hex::HexToArrayError),
+    /// `serde_json` error.
+    Json(serde_json::Error),
     /// Transport error.
     Transport(E),
 }
@@ -21,6 +23,7 @@ impl<E: core::fmt::Display> core::fmt::Display for Error<E> {
             Self::Decode(e) => write!(f, "{e}"),
             Self::DecodeHex(e) => write!(f, "{e}"),
             Self::HexToArray(e) => write!(f, "{e}"),
+            Self::Json(e) => write!(f, "{e}"),
             Self::Transport(e) => write!(f, "{e}"),
         }
     }

@@ -1,5 +1,8 @@
-use crate::Transport;
+use core::fmt;
 
+use bytes::Bytes;
+
+use crate::Transport;
 pub extern crate reqwest;
 pub extern crate tokio;
 
@@ -60,43 +63,36 @@ impl ReqwestClient {
 }
 
 impl Transport for ReqwestClient {
-    type Resp = reqwest::Response;
+    type Body = Bytes;
 
-    type Err = reqwest::Error;
+    type Err = ReqwestError;
 
-    async fn get<'a>(&'a self, path: &'a str) -> Result<Self::Resp, Self::Err>
+    async fn get<'a>(&'a self, path: &'a str) -> Result<Self::Body, Self::Err>
     where
         Self: 'a,
     {
-        match self.send_retry(path).await?.error_for_status() {
-            Err(e) => Err(e),
-            resp => resp,
+        let resp = self.send_retry(path).await?;
+        if !resp.status().is_success() {
+            return Err(ReqwestError::HttpResponse {
+                status: resp.status().as_u16(),
+                message: resp.text().await?,
+            });
         }
+        Ok(resp.bytes().await?)
     }
 
-    async fn post<'a>(&'a self, path: &'a str, body: String) -> Result<Self::Resp, Self::Err>
+    async fn post<'a>(&'a self, path: &'a str, body: String) -> Result<Self::Body, Self::Err>
     where
         Self: 'a,
     {
-        match self.inner.post(path).body(body).send().await?.error_for_status() {
-            Err(e) => Err(e),
-            resp => resp,
+        let resp = self.inner.post(path).body(body).send().await?;
+        if !resp.status().is_success() {
+            return Err(ReqwestError::HttpResponse {
+                status: resp.status().as_u16(),
+                message: resp.text().await?,
+            });
         }
-    }
-
-    async fn handle_response_text(&self, resp: Self::Resp) -> Result<String, Self::Err> {
-        resp.text().await
-    }
-
-    async fn handle_response_raw(&self, resp: Self::Resp) -> Result<Vec<u8>, Self::Err> {
-        Ok(resp.bytes().await?.to_vec())
-    }
-
-    async fn handle_response_json<'a, O>(&'a self, resp: Self::Resp) -> Result<O, Self::Err>
-    where
-        O: for<'de> serde::Deserialize<'de> + 'a,
-    {
-        resp.json().await
+        Ok(resp.bytes().await?)
     }
 }
 
@@ -128,4 +124,30 @@ impl ReqwestClient {
 /// - `503`: SERVICE_UNAVAILABLE
 fn is_status_retryable(status: reqwest::StatusCode) -> bool {
     [429, 500, 503].contains(&status.as_u16())
+}
+
+/// Error for `ReqwestClient`
+#[derive(Debug)]
+pub enum ReqwestError {
+    /// `reqwest` error.
+    Reqwest(reqwest::Error),
+    /// Reponse error.
+    HttpResponse { status: u16, message: String },
+}
+
+impl fmt::Display for ReqwestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Reqwest(e) => write!(f, "{e}"),
+            Self::HttpResponse { status, message } => write!(f, "{status} {message}"),
+        }
+    }
+}
+
+impl std::error::Error for ReqwestError {}
+
+impl From<reqwest::Error> for ReqwestError {
+    fn from(e: reqwest::Error) -> Self {
+        Self::Reqwest(e)
+    }
 }
