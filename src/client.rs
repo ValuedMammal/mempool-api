@@ -57,7 +57,7 @@ impl<T: Transport> AsyncClient<T> {
         let body = self.tx.get(&path).await.map_err(Error::Transport)?;
         let s = String::from_utf8_lossy(body.as_ref());
 
-        Ok(s.parse::<u32>().unwrap())
+        s.parse::<u32>().map_err(Error::ParseInt)
     }
 
     /// GET `/block-height/:height`.

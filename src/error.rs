@@ -1,5 +1,7 @@
 //! [`Error`].
 
+use core::num::ParseIntError;
+
 use bitcoin::{consensus, hex};
 
 /// Errors that can occur in this library.
@@ -13,6 +15,8 @@ pub enum Error<E> {
     HexToArray(hex::HexToArrayError),
     /// `serde_json` error.
     Json(serde_json::Error),
+    /// Error parsing an integer.
+    ParseInt(ParseIntError),
     /// Transport error.
     Transport(E),
 }
@@ -24,6 +28,7 @@ impl<E: core::fmt::Display> core::fmt::Display for Error<E> {
             Self::DecodeHex(e) => write!(f, "{e}"),
             Self::HexToArray(e) => write!(f, "{e}"),
             Self::Json(e) => write!(f, "{e}"),
+            Self::ParseInt(e) => write!(f, "{e}"),
             Self::Transport(e) => write!(f, "{e}"),
         }
     }
