@@ -209,7 +209,7 @@ impl<T: Http> AsyncClient<T> {
         serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
-    /// GET `/blocks/[:height]`.
+    /// GET `/blocks/:height`.
     pub async fn get_blocks(
         &self,
         height: Option<u32>,

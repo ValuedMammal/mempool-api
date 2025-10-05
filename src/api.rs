@@ -3,7 +3,7 @@
 use bitcoin::{BlockHash, ScriptBuf, TxMerkleNode, Txid};
 use serde::Deserialize;
 
-/// Represents response to GET Recommended Fees.
+/// Represents response to Get Recommended Fees.
 #[derive(Debug, Deserialize)]
 pub struct RecommendedFees {
     /// Fastest fee.
