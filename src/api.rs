@@ -1,7 +1,7 @@
 //! [`api`](self).
 
 use bitcoin::{BlockHash, ScriptBuf, TxMerkleNode, Txid};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 /// Represents response to GET Recommended Fees.
 #[derive(Debug, Deserialize)]
@@ -24,7 +24,7 @@ pub struct RecommendedFees {
 }
 
 /// Element in the response to Get Address Transactions.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct AddressTx {
     /// Transaction ID (txid) as a hex string.
     pub txid: Txid,
@@ -49,7 +49,7 @@ pub struct AddressTx {
 }
 
 /// Represents a transaction input (vin).
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Vin {
     /// Previous transaction ID referenced by this input.
     pub txid: Txid,
@@ -68,7 +68,7 @@ pub struct Vin {
 }
 
 /// Represents a transaction output (vout).
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Vout {
     /// ScriptPubKey as a hex string.
     pub scriptpubkey: ScriptBuf,
@@ -84,7 +84,7 @@ pub struct Vout {
 }
 
 /// Represents the confirmation status and block information for a transaction.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Status {
     /// True if the transaction is confirmed.
     pub confirmed: bool,
@@ -97,7 +97,7 @@ pub struct Status {
 }
 
 /// Represents response to Get Mempool.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct MempoolStats {
     /// Number of transactions in the mempool.
     pub count: u64,
@@ -111,7 +111,7 @@ pub struct MempoolStats {
 
 /// Represents a Bitcoin transaction from Get Transaction.
 // Note: This is the same as AddressTx.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct TxInfo {
     /// Transaction ID (hex).
     pub txid: Txid,
@@ -136,7 +136,7 @@ pub struct TxInfo {
 }
 
 /// Represents a Bitcoin block from Get Block.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct BlockSummary {
     /// Block hash.
     pub id: BlockHash,
@@ -167,7 +167,7 @@ pub struct BlockSummary {
 }
 
 /// Represents address details from Get Address.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct AddressInfo {
     /// The address string.
     pub address: String,
@@ -178,7 +178,7 @@ pub struct AddressInfo {
 }
 
 /// Represents address statistics.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct AddressStats {
     /// Number of funded outputs.
     pub funded_txo_count: u64,
@@ -204,7 +204,7 @@ pub struct MerkleProof {
 }
 
 /// Represents an element in the response to Get Address UTXO.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct AddressUtxo {
     /// Transaction ID (txid) as a hex string.
     pub txid: Txid,
@@ -217,7 +217,7 @@ pub struct AddressUtxo {
 }
 
 /// Represents response to Get Transaction Outspend.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct OutputStatus {
     /// True if the output has been spent.
     pub spent: bool,
@@ -230,7 +230,7 @@ pub struct OutputStatus {
 }
 
 /// Represents response to Get Block Status.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct BlockStatus {
     /// True if the block is in the best chain.
     pub in_best_chain: bool,
