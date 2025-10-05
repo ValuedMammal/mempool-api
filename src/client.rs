@@ -99,11 +99,11 @@ impl<T: Http> AsyncClient<T> {
         &self,
         txid: &Txid,
         vout: u32,
-    ) -> Result<OutputStatus, Error<T::Err>> {
-        let path = format!("{}/tx/{txid}/outspend/{vout}", self.url);
-        let body = self.inner.get(&path).await.map_err(Error::Http)?;
-
-        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
+    ) -> Result<Option<OutputStatus>, Error<T::Err>> {
+        // Note: `mempool/electrs` currently returns a default output status
+        // for non-existent outputs, so here we fetch the correct outspends
+        // and then lookup the specified vout.
+        Ok(self.get_outspends(txid).await?.get(vout as usize).cloned())
     }
 
     /// GET `/tx/:txid/outspends`.
