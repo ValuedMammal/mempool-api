@@ -17,8 +17,8 @@ pub enum Error<E> {
     Json(serde_json::Error),
     /// Error parsing an integer.
     ParseInt(ParseIntError),
-    /// Transport error.
-    Transport(E),
+    /// Http error.
+    Http(E),
 }
 
 impl<E: core::fmt::Display> core::fmt::Display for Error<E> {
@@ -29,7 +29,7 @@ impl<E: core::fmt::Display> core::fmt::Display for Error<E> {
             Self::HexToArray(e) => write!(f, "{e}"),
             Self::Json(e) => write!(f, "{e}"),
             Self::ParseInt(e) => write!(f, "{e}"),
-            Self::Transport(e) => write!(f, "{e}"),
+            Self::Http(e) => write!(f, "{e}"),
         }
     }
 }

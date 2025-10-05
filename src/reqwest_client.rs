@@ -2,7 +2,7 @@ use core::fmt;
 
 use bytes::Bytes;
 
-use crate::Transport;
+use crate::Http;
 pub extern crate reqwest;
 pub extern crate tokio;
 
@@ -11,7 +11,7 @@ const BASE_BACKOFF_MILLIS: u64 = 256;
 /// Default max retries.
 const DEFAULT_MAX_RETRIES: u32 = 10;
 
-/// Wrapper for [`reqwest::Client`] to act as the transport mechanism.
+/// Wrapper for [`reqwest::Client`] to act as the HTTP implementation.
 #[derive(Debug)]
 pub struct ReqwestClient {
     /// inner `reqwest` client.
@@ -62,7 +62,7 @@ impl ReqwestClient {
     }
 }
 
-impl Transport for ReqwestClient {
+impl Http for ReqwestClient {
     type Body = Bytes;
 
     type Err = ReqwestError;

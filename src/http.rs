@@ -2,8 +2,8 @@ use core::fmt::{Debug, Display};
 use core::future::Future;
 use core::ops::Deref;
 
-/// Trait describing the behavior required of the I/O transport mechanism.
-pub trait Transport {
+/// Trait describing the behavior required of the HTTP client.
+pub trait Http {
     /// Body
     type Body: AsRef<[u8]>;
 
@@ -25,14 +25,14 @@ pub trait Transport {
         Self: 'a;
 }
 
-impl<T> Transport for T
+impl<T> Http for T
 where
     T: Deref,
-    T::Target: Transport,
+    T::Target: Http,
 {
-    type Body = <T::Target as Transport>::Body;
+    type Body = <T::Target as Http>::Body;
 
-    type Err = <T::Target as Transport>::Err;
+    type Err = <T::Target as Http>::Err;
 
     fn get<'a>(&'a self, path: &'a str) -> impl Future<Output = Result<Self::Body, Self::Err>>
     where

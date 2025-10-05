@@ -3,12 +3,12 @@
 pub mod api;
 mod client;
 mod error;
+mod http;
 #[cfg(feature = "reqwest")]
 mod reqwest_client;
-mod transport;
 
 pub use client::*;
 pub use error::*;
+pub use http::*;
 #[cfg(feature = "reqwest")]
 pub use reqwest_client::*;
-pub use transport::*;
