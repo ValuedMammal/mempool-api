@@ -106,6 +106,14 @@ impl<T: Http> AsyncClient<T> {
         serde_json::from_slice(body.as_ref()).map_err(Error::Json)
     }
 
+    /// GET `/tx/:txid/outspends`.
+    pub async fn get_outspends(&self, txid: &Txid) -> Result<Vec<OutputStatus>, Error<T::Err>> {
+        let path = format!("{}/tx/{txid}/outspends", self.url);
+        let body = self.inner.get(&path).await.map_err(Error::Http)?;
+
+        serde_json::from_slice(body.as_ref()).map_err(Error::Json)
+    }
+
     /// GET `/scripthash/:hex/txs`.
     pub async fn get_scripthash_txs(
         &self,
