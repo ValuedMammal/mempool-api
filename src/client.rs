@@ -290,8 +290,8 @@ mod test {
 
     #[tokio::test]
     async fn test_get_tip() -> anyhow::Result<()> {
-        let reqwest_client = crate::ReqwestClient::new();
-        let client = AsyncClient::new(URL, reqwest_client);
+        let bitreq_client = crate::BitreqClient::new();
+        let client = AsyncClient::new(URL, bitreq_client);
 
         let _ = client.get_tip_height().await?;
         let _ = client.get_tip_hash().await?;
