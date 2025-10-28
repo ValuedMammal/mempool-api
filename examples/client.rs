@@ -7,8 +7,8 @@ const URL: &str = "https://mempool.space/api";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let reqwest_client = mempool_space_api::ReqwestClient::default();
-    let client = AsyncClient::new(URL, &reqwest_client);
+    let bitreq_client = mempool_space_api::BitreqClient::builder().retries(6).build();
+    let client = AsyncClient::new(URL, &bitreq_client);
 
     // GET /blocks/tip/height.
     let res = client.get_tip_height().await?;

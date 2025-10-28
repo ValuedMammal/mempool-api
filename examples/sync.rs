@@ -11,8 +11,8 @@ const URL: &str = "https://mempool.space/signet/api";
 async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init_timed();
 
-    let reqwest_client = mempool_space_api::ReqwestClient::default();
-    let client = AsyncClient::new(URL, &reqwest_client);
+    let bitreq_client = mempool_space_api::BitreqClient::default();
+    let client = AsyncClient::new(URL, &bitreq_client);
 
     let desc_str = "wpkh(tprv8ZgxMBicQKsPdy6LMhUtFHAgpocR8GC6QmwMSFpZs7h6Eziw3SpThFfczTDh5rW2krkqffa11UpX3XkeTTB2FvzZKWXqPY54Y6Rq4AQ5R8L/84'/1'/0'/0/*)";
     let secp = secp256k1::Secp256k1::new();
