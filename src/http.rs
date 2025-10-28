@@ -10,15 +10,15 @@ pub trait Http {
     /// Error
     type Err: Debug + Display;
 
-    /// Sends a GET request to the given `path`.
-    fn get<'a>(&'a self, path: &'a str) -> impl Future<Output = Result<Self::Body, Self::Err>>
+    /// Sends a GET request to the given `url`.
+    fn get<'a>(&'a self, url: &'a str) -> impl Future<Output = Result<Self::Body, Self::Err>>
     where
         Self: 'a;
 
-    /// Sends a POST request to `path` with text body.
+    /// Sends a POST request to `url` with text body.
     fn post<'a>(
         &'a self,
-        path: &'a str,
+        url: &'a str,
         body: String,
     ) -> impl Future<Output = Result<Self::Body, Self::Err>>
     where
@@ -34,21 +34,21 @@ where
 
     type Err = <T::Target as Http>::Err;
 
-    fn get<'a>(&'a self, path: &'a str) -> impl Future<Output = Result<Self::Body, Self::Err>>
+    fn get<'a>(&'a self, url: &'a str) -> impl Future<Output = Result<Self::Body, Self::Err>>
     where
         Self: 'a,
     {
-        (**self).get(path)
+        (**self).get(url)
     }
 
     fn post<'a>(
         &'a self,
-        path: &'a str,
+        url: &'a str,
         body: String,
     ) -> impl Future<Output = Result<Self::Body, Self::Err>>
     where
         Self: 'a,
     {
-        (**self).post(path, body)
+        (**self).post(url, body)
     }
 }

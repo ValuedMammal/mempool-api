@@ -67,11 +67,11 @@ impl Http for ReqwestClient {
 
     type Err = ReqwestError;
 
-    async fn get<'a>(&'a self, path: &'a str) -> Result<Self::Body, Self::Err>
+    async fn get<'a>(&'a self, url: &'a str) -> Result<Self::Body, Self::Err>
     where
         Self: 'a,
     {
-        let resp = self.send_retry(path).await?;
+        let resp = self.send_retry(url).await?;
         if !resp.status().is_success() {
             return Err(ReqwestError::HttpResponse {
                 status: resp.status().as_u16(),
@@ -81,11 +81,11 @@ impl Http for ReqwestClient {
         Ok(resp.bytes().await?)
     }
 
-    async fn post<'a>(&'a self, path: &'a str, body: String) -> Result<Self::Body, Self::Err>
+    async fn post<'a>(&'a self, url: &'a str, body: String) -> Result<Self::Body, Self::Err>
     where
         Self: 'a,
     {
-        let resp = self.inner.post(path).body(body).send().await?;
+        let resp = self.inner.post(url).body(body).send().await?;
         if !resp.status().is_success() {
             return Err(ReqwestError::HttpResponse {
                 status: resp.status().as_u16(),
@@ -98,12 +98,12 @@ impl Http for ReqwestClient {
 
 impl ReqwestClient {
     /// Send and retry.
-    async fn send_retry(&self, path: &str) -> Result<reqwest::Response, reqwest::Error> {
+    async fn send_retry(&self, url: &str) -> Result<reqwest::Response, reqwest::Error> {
         let mut delay = BASE_BACKOFF_MILLIS;
         let mut attempts = 0;
 
         loop {
-            match self.inner.get(path).send().await? {
+            match self.inner.get(url).send().await? {
                 resp if attempts < self.max_retries && is_status_retryable(resp.status()) => {
                     tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
                     delay *= 2;
