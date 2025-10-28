@@ -2,7 +2,7 @@ use core::fmt;
 
 use bytes::Bytes;
 
-use crate::Http;
+use crate::{Http, HttpMethod};
 pub extern crate reqwest;
 pub extern crate tokio;
 
@@ -20,19 +20,33 @@ pub struct ReqwestClient {
     max_retries: u32,
 }
 
-/// Reqwest client config.
+/// Reqwest client config builder.
 #[derive(Debug)]
-#[non_exhaustive]
 pub struct Config {
-    /// The maximum number of times to retry a failed request.
-    pub max_retries: u32,
+    client: ReqwestClient,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            max_retries: DEFAULT_MAX_RETRIES,
+            client: ReqwestClient {
+                inner: reqwest::Client::default(),
+                max_retries: DEFAULT_MAX_RETRIES,
+            },
         }
+    }
+}
+
+impl Config {
+    /// Set the maximum number of times to retry a failed request.
+    pub fn max_retries(mut self, n: u32) -> Self {
+        self.client.max_retries = n;
+        self
+    }
+
+    /// Build.
+    pub fn build(self) -> ReqwestClient {
+        self.client
     }
 }
 
@@ -45,20 +59,12 @@ impl Default for ReqwestClient {
 impl ReqwestClient {
     /// New with default config.
     pub fn new() -> Self {
-        Self::with_conf(Config::default())
+        Config::default().build()
     }
 
     /// Return a new reqwest client [`Config`].
     pub fn config() -> Config {
         Config::default()
-    }
-
-    /// New with the provided [`Config`].
-    pub fn with_conf(conf: Config) -> Self {
-        Self {
-            inner: reqwest::Client::new(),
-            max_retries: conf.max_retries,
-        }
     }
 }
 
@@ -67,43 +73,45 @@ impl Http for ReqwestClient {
 
     type Err = ReqwestError;
 
-    async fn get<'a>(&'a self, url: &'a str) -> Result<Self::Body, Self::Err>
+    async fn send<'a>(
+        &'a self,
+        method: HttpMethod,
+        url: &'a str,
+        body: impl Into<Self::Body>,
+    ) -> Result<Self::Body, Self::Err>
     where
         Self: 'a,
     {
-        let resp = self.send_retry(url).await?;
-        if !resp.status().is_success() {
-            return Err(ReqwestError::HttpResponse {
-                status: resp.status().as_u16(),
-                message: resp.text().await?,
-            });
-        }
-        Ok(resp.bytes().await?)
-    }
+        let resp = self.send_retry(method, url, body.into()).await?;
 
-    async fn post<'a>(&'a self, url: &'a str, body: String) -> Result<Self::Body, Self::Err>
-    where
-        Self: 'a,
-    {
-        let resp = self.inner.post(url).body(body).send().await?;
         if !resp.status().is_success() {
             return Err(ReqwestError::HttpResponse {
                 status: resp.status().as_u16(),
                 message: resp.text().await?,
             });
         }
+
         Ok(resp.bytes().await?)
     }
 }
 
 impl ReqwestClient {
-    /// Send and retry.
-    async fn send_retry(&self, url: &str) -> Result<reqwest::Response, reqwest::Error> {
+    /// Sends a request and allows for retrying failed attempts. See [`is_status_retryable`].
+    async fn send_retry(
+        &self,
+        method: HttpMethod,
+        url: &str,
+        body: Bytes,
+    ) -> Result<reqwest::Response, reqwest::Error> {
         let mut delay = BASE_BACKOFF_MILLIS;
         let mut attempts = 0;
 
         loop {
-            match self.inner.get(url).send().await? {
+            let request = match method {
+                HttpMethod::GET => self.inner.get(url),
+                HttpMethod::POST => self.inner.post(url).body(body.clone()),
+            };
+            match request.send().await? {
                 resp if attempts < self.max_retries && is_status_retryable(resp.status()) => {
                     tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
                     delay *= 2;
