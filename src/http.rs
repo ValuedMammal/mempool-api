@@ -19,6 +19,16 @@ impl HttpMethod {
     pub const POST: Self = Self(Method::Post);
 }
 
+#[cfg(feature = "bitreq")]
+impl From<HttpMethod> for bitreq::Method {
+    fn from(method: HttpMethod) -> Self {
+        match method.0 {
+            Method::Get => bitreq::Method::Get,
+            Method::Post => bitreq::Method::Post,
+        }
+    }
+}
+
 /// Trait describing the behavior required of the HTTP client.
 pub trait Http {
     /// Body
