@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 /// Server url.
 const URL: &str = "https://mempool.space/signet/api";
+const STOP_GAP: u32 = 20;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -51,6 +52,10 @@ async fn main() -> anyhow::Result<()> {
             })
             .collect::<FuturesOrdered<_>>();
 
+        if futures.is_empty() {
+            break;
+        }
+
         for (index, script, txs) in futures.try_collect::<Vec<_>>().await? {
             if txs.is_empty() {
                 unused_ct += 1;
@@ -65,7 +70,7 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // Gap limit reached
-        if unused_ct > 20 {
+        if unused_ct > STOP_GAP {
             log::info!("Last active index {:?}", last_active);
             break;
         }
