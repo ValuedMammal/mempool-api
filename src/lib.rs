@@ -1,4 +1,5 @@
 //! `mempool_space_api`
+#![doc = include_str!("../README.md")]
 
 pub mod api;
 #[cfg(feature = "bitreq")]
