@@ -11,6 +11,9 @@ description = "Generic asynchronous client library for mempool.space API"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 
+[package.metadata.docs.rs]
+features = ["bitreq"]
+
 [dependencies]
 bitcoin = { version = "0.32.7", default-features = false, features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
